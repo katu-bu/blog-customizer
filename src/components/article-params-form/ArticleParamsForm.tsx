@@ -4,7 +4,7 @@ import { Button } from 'src/ui/button';
 import styles from './ArticleParamsForm.module.scss';
 import { Select } from 'src/ui/select';
 import { RadioGroup } from 'src/ui/radio-group';
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import {
 	ArticleStateType,
 	backgroundColors,
@@ -18,25 +18,26 @@ import { Separator } from 'src/ui/separator';
 
 type ArticleParamsFormProps = {
 	onSubmit: (selected: ArticleStateType) => void;
+	initArticleState: ArticleStateType;
 };
 
 export const ArticleParamsForm = (props: ArticleParamsFormProps) => {
-	const [isOpen, setIsOpen] = useState(false);
+	const [isFormOpen, setIsFormOpen] = useState(false);
 	const toggleOpen = () => {
-		setIsOpen(!isOpen);
+		setIsFormOpen(!isFormOpen);
 	};
 	const [fontFamilyOption, setFontFamilyOption] = useState(
-		defaultArticleState.fontFamilyOption
+		props.initArticleState.fontFamilyOption
 	);
-	const [fontColor, setFontColor] = useState(defaultArticleState.fontColor);
+	const [fontColor, setFontColor] = useState(props.initArticleState.fontColor);
 	const [fontSizeOption, setFontSizeOption] = useState(
-		defaultArticleState.fontSizeOption
+		props.initArticleState.fontSizeOption
 	);
 	const [backgroundColor, setBackgroundColor] = useState(
-		defaultArticleState.backgroundColor
+		props.initArticleState.backgroundColor
 	);
 	const [contentWidth, setContentWidth] = useState(
-		defaultArticleState.contentWidth
+		props.initArticleState.contentWidth
 	);
 
 	const handleSubmit = (event: FormEvent) => {
@@ -58,14 +59,30 @@ export const ArticleParamsForm = (props: ArticleParamsFormProps) => {
 		setFontSizeOption(defaultArticleState.fontSizeOption);
 		setBackgroundColor(defaultArticleState.backgroundColor);
 		setContentWidth(defaultArticleState.contentWidth);
+		toggleOpen();
+		props.onSubmit(defaultArticleState);
 	};
+
+	useEffect(() => {
+		const handleEscKey = (event: KeyboardEvent) => {
+			if (isFormOpen && event.key === 'Escape') {
+				setIsFormOpen(false);
+			}
+		};
+		if (isFormOpen) {
+			document.addEventListener('keydown', handleEscKey);
+			return () => {
+				document.removeEventListener('keydown', handleEscKey);
+			};
+		}
+	}, [isFormOpen]);
 
 	return (
 		<>
-			<ArrowButton isOpen={isOpen} onClick={toggleOpen} />
+			<ArrowButton isOpen={isFormOpen} onClick={toggleOpen} />
 			<aside
 				className={`${styles.container} ${
-					isOpen ? styles.container_open : ''
+					isFormOpen ? styles.container_open : ''
 				}`}>
 				<form
 					className={styles.form}
@@ -115,6 +132,9 @@ export const ArticleParamsForm = (props: ArticleParamsFormProps) => {
 					</div>
 				</form>
 			</aside>
+			<div
+				className={`${styles.overlay} ${isFormOpen ? styles.overlay_open : ''}`}
+				onClick={toggleOpen}></div>
 		</>
 	);
 };
